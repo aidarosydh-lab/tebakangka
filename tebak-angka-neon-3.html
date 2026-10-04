@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tebak Angka Neon</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050816;--panel:#0d1430;--cyan:#00eaff;--purple:#a855f7;--pink:#ff3cac;--green:#00f5a0;--yellow:#ffd43b;--red:#ff4d7d}
+body{min-height:100vh;font-family:Arial,sans-serif;color:#f4f7ff;background:radial-gradient(circle at 10% 20%,#07344a 0,transparent 28%),radial-gradient(circle at 90% 10%,#32105a 0,transparent 28%),var(--bg);padding:20px;overflow-x:hidden}
+header{text-align:center;padding:20px 10px 25px}
+.badge{display:inline-block;padding:7px 14px;border:1px solid #00eaff55;border-radius:30px;color:var(--cyan);font-size:11px;font-weight:bold;letter-spacing:1px;margin-bottom:14px}
+h1{font-size:clamp(40px,8vw,72px);font-weight:900;background:linear-gradient(90deg,#fff,var(--cyan),var(--purple),var(--pink));-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{color:#8993b7;margin-top:10px}
+.game{max-width:1150px;margin:auto;display:grid;grid-template-columns:210px minmax(0,1fr) 230px;gap:16px}
+.panel,.main-card{background:rgba(10,17,43,.92);border:1px solid #596bd044;border-radius:22px;box-shadow:0 15px 50px #0008,inset 0 1px #fff08;padding:20px}
+.main-card{padding:22px}
+.title{font-weight:800;margin-bottom:16px;font-size:16px}
+.levels{display:grid;gap:9px}
+.level{border:1px solid #5262a555;background:#101a3b;color:#cbd3f8;padding:14px 8px;border-radius:13px;cursor:pointer;font-weight:800}
+.level.active{border-color:var(--green);color:var(--green);background:#00f5a018;box-shadow:0 0 18px #00f5a018}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+.stat{background:#050b20;border:1px solid #5364a522;border-radius:13px;text-align:center;padding:11px 4px}
+.stat small{display:block;color:#8993b7;font-size:9px;text-transform:uppercase;margin-bottom:5px}
+.stat strong{font-size:19px}
+#attempts{color:var(--cyan)}#best{color:var(--yellow)}
+.message{text-align:center;min-height:100px;display:flex;flex-direction:column;justify-content:center;align-items:center;margin-bottom:10px}
+.message .icon{font-size:38px}.message .text{font-weight:800;font-size:17px;margin-top:5px}.message .sub{font-size:12px;color:#8993b7;margin-top:5px}
+input{width:100%;height:75px;border-radius:17px;border:2px solid #a855f777;background:#030817;color:#fff;text-align:center;font-size:31px;font-weight:900;outline:none;margin-bottom:10px}
+input:focus{border-color:var(--cyan);box-shadow:0 0 25px #00eaff33}
+.guess{width:100%;height:58px;border:0;border-radius:14px;background:linear-gradient(100deg,#00b894,#00eaff);color:#04111a;font-size:17px;font-weight:900;cursor:pointer}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:9px}
+.action{height:50px;border-radius:13px;border:1px solid #526eea77;background:#17244d;color:#fff;font-weight:800;cursor:pointer}
+.hint{background:#5b218566;border-color:#a855f777}
+.feedback{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.feedback div{background:#050b20;border:1px solid #fff08;border-radius:13px;padding:12px;text-align:center}
+.arrow{font-size:28px;display:block}.down{color:var(--red)}.up{color:var(--cyan)}
+.feedback small{color:#8993b7}
+.history{max-height:410px;overflow:auto}.empty{text-align:center;color:#596382;font-size:12px;line-height:1.6;padding:30px 5px}
+.item{display:flex;justify-content:space-between;align-items:center;background:#050b20;border:1px solid #5364a522;border-radius:12px;padding:11px;margin-bottom:7px;animation:pop .3s}
+.num{font-size:18px;font-weight:900}.small{color:var(--cyan);font-size:11px;font-weight:800}.big{color:var(--red);font-size:11px;font-weight:800}.win{color:var(--green);font-size:11px;font-weight:800;border-color:#00f5a055}
+.shake{animation:shake .4s}@keyframes shake{20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.confetti{position:fixed;top:-20px;width:8px;height:14px;z-index:99;animation:fall 3s linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(720deg);opacity:0}}
+footer{text-align:center;color:#596382;font-size:11px;padding:22px}
+@media(max-width:850px){.game{grid-template-columns:1fr;max-width:650px}.levels{grid-template-columns:repeat(3,1fr)}.tip{display:none}.history{max-height:240px}}
+@media(max-width:500px){body{padding:10px}.panel,.main-card{padding:15px}.levels button{font-size:12px}.stats strong{font-size:16px}input{height:82px;font-size:34px}.guess{height:62px}}
+</style>
+</head>
+<body>
+<header>
+<div class="badge">🎮 MINI GAME • NEON EDITION</div>
+<h1>TEBAK ANGKA</h1>
+<p>Tebak angka rahasia dan buktikan kamu jago! ⚡</p>
+</header>
+
+<main class="game">
+<aside class="panel">
+<div class="title">🎯 Pilih Level</div>
+<div class="levels">
+<button class="level active" data-max="50">1 – 50</button>
+<button class="level" data-max="100">1 – 100</button>
+<button class="level" data-max="200">1 – 200</button>
+</div>
+<div class="tip">💡 Gunakan sesedikit mungkin percobaan untuk mendapatkan skor terbaik!</div>
+</aside>
+
+<section class="main-card" id="card">
+<div class="stats">
+<div class="stat"><small>Level</small><strong id="levelText">1–50</strong></div>
+<div class="stat"><small>Percobaan</small><strong id="attempts">0/5</strong></div>
+<div class="stat"><small>Skor Terbaik</small><strong id="best">—</strong></div>
+</div>
+
+<div class="message" id="message">
+<div class="icon">🤖</div>
+<div class="text">Masukkan angka dan tekan Tebak!</div>
+<div class="sub">Komputer sudah memilih angka rahasia...</div>
+</div>
+
+<input id="input" type="number" min="1" placeholder="Masukkan angka..." inputmode="numeric">
+
+<button class="guess" id="guess">🚀 TEBAK</button>
+
+<div class="actions">
+<button class="action" id="newGame">🔀 Acak Lagi</button>
+<button class="action hint" id="hint">💡 Bocoran Jawaban</button>
+</div>
+
+<div class="feedback">
+<div><span class="arrow down">↓</span><small>Terlalu kecil</small></div>
+<div><span class="arrow up">↑</span><small>Terlalu besar</small></div>
+</div>
+</section>
+
+<aside class="panel">
+<div class="title">📜 Riwayat Tebakan</div>
+<div class="history" id="history"><div class="empty">Belum ada tebakan.<br>Yuk mulai bermain! 🎯</div></div>
+</aside>
+</main>
+<footer>⚡ Jangan menyerah — angka rahasia itu pasti ketemu!</footer>
+
+<script>
+(function(){
+"use strict";
+
+var maxNumber=50;
+var secret=0;
+var attempts=0;
+var over=false;
+var hintUsed=false;
+var history=[];
+
+var input=document.getElementById("input");
+var guessBtn=document.getElementById("guess");
+var newBtn=document.getElementById("newGame");
+var hintBtn=document.getElementById("hint");
+var attemptsEl=document.getElementById("attempts");
+var bestEl=document.getElementById("best");
+var levelEl=document.getElementById("levelText");
+var message=document.getElementById("message");
+var historyEl=document.getElementById("history");
+var card=document.getElementById("card");
+
+function random(max){return Math.floor(Math.random()*max)+1}
+
+function key(){return "tebakAngkaBest_"+maxNumber}
+
+function updateBest(){
+    try{
+        var b=localStorage.getItem(key());
+        bestEl.textContent=b||"—";
+    }catch(e){bestEl.textContent="—"}
+}
+
+function saveBest(score){
+    try{
+        var old=localStorage.getItem(key());
+        if(!old || score<Number(old)){
+            localStorage.setItem(key(),String(score));
+            bestEl.textContent=score;
+        }
+    }catch(e){}
+}
+
+function msg(icon,title,sub){
+    message.innerHTML='<div class="icon">'+icon+'</div><div class="text">'+title+'</div><div class="sub">'+sub+'</div>';
+}
+
+function shake(){
+    card.classList.remove("shake");
+    void card.offsetWidth;
+    card.classList.add("shake");
+}
+
+function render(){
+    if(!history.length){
+        historyEl.innerHTML='<div class="empty">Belum ada tebakan.<br>Yuk mulai bermain! 🎯</div>';
+        return;
+    }
+    historyEl.innerHTML=history.map(function(x){
+        if(x.type==="small") return '<div class="item"><span class="num">'+x.n+'</span><span class="small">↑ KEKECILAN</span></div>';
+        if(x.type==="big") return '<div class="item"><span class="num">'+x.n+'</span><span class="big">↓ KEBESARAN</span></div>';
+        return '<div class="item win"><span class="num">'+x.n+'</span><span class="win">✓ BENAR</span></div>';
+    }).join("");
+}
+
+function confetti(){
+    var colors=["#00eaff","#a855f7","#ff3cac","#00f5a0","#ffd43b","#fff"];
+    for(var i=0;i<90;i++){
+        var c=document.createElement("div");
+        c.className="confetti";
+        c.style.left=Math.random()*100+"vw";
+        c.style.background=colors[Math.floor(Math.random()*colors.length)];
+        c.style.animationDuration=(2+Math.random()*2)+"s";
+        c.style.animationDelay=(Math.random()*.5)+"s";
+        document.body.appendChild(c);
+        setTimeout(function(el){return function(){el.remove()}}(c),4500);
+    }
+}
+
+function newGame(){
+    secret=random(maxNumber);
+    attempts=0;
+    over=false;
+    hintUsed=false;
+    history=[];
+    attemptsEl.textContent="0/5";
+    input.disabled=false;
+    guessBtn.disabled=false;
+    guessBtn.style.opacity="1";
+    input.value="";
+    hintBtn.textContent="💡 Bocoran Jawaban";
+    levelEl.textContent="1–"+maxNumber;
+    render();
+    updateBest();
+    msg("🤖","Angka baru sudah dipilih!","Tebak angka dari 1 sampai "+maxNumber+".");
+    input.focus();
+}
+
+function makeGuess(){
+    if(over){
+        msg("🏆","Game sudah selesai!","Klik Acak Lagi untuk bermain kembali.");
+        return;
+    }
+
+    var value=input.value.trim();
+    if(value===""){
+        msg("⚠️","Masukkan angka!","Jangan biarkan kotaknya kosong.");
+        shake(); input.focus(); return;
+    }
+
+    var guess=Number(value);
+
+    if(!Number.isInteger(guess) || guess<1 || guess>maxNumber){
+        msg("⚠️","Angka tidak valid!","Masukkan angka dari 1 sampai "+maxNumber+".");
+        shake(); input.focus(); return;
+    }
+
+    attempts++;
+    attemptsEl.textContent=attempts+"/5";
+
+    if(guess===secret){
+        over=true;
+        history.unshift({n:guess,type:"win"});
+        render();
+        saveBest(attempts);
+        msg("🥳","KAMU MENANG!","Angka rahasianya adalah "+secret+" • "+attempts+" percobaan.");
+        input.disabled=true;
+        guessBtn.disabled=true;
+        guessBtn.style.opacity=".55";
+        confetti();
+        return;
+    }
+
+    if(guess<secret){
+        history.unshift({n:guess,type:"small"});
+        msg("⬆️","Terlalu kecil!","Coba angka yang lebih besar.");
+    }else{
+        history.unshift({n:guess,type:"big"});
+        msg("⬇️","Terlalu besar!","Coba angka yang lebih kecil.");
+    }
+
+    render();
+    shake();
+
+    // Setelah 5 tebakan salah, pemain kalah.
+    if(attempts >= 5){
+        over=true;
+        input.disabled=true;
+        guessBtn.disabled=true;
+        guessBtn.style.opacity=".55";
+        msg("😭","KAMU KALAH!","5 percobaan sudah habis. Angka rahasianya adalah "+secret+".");
+        return;
+    }
+
+    input.value="";
+    input.focus();
+}
+
+guessBtn.addEventListener("click",makeGuess);
+newBtn.addEventListener("click",newGame);
+
+input.addEventListener("keydown",function(e){
+    if(e.key==="Enter") makeGuess();
+});
+
+hintBtn.addEventListener("click",function(){
+    if(over) return;
+    if(hintUsed){
+        msg("🔒","Bocoran sudah digunakan!","Bocoran hanya bisa dipakai sekali.");
+        return;
+    }
+    hintUsed=true;
+    var range=Math.max(1,Math.floor(maxNumber*.12));
+    var min=Math.max(1,secret-range);
+    var max=Math.min(maxNumber,secret+range);
+    msg("🕵️","Bocoran!","Angka rahasia berada sekitar "+min+" – "+max+".");
+    hintBtn.textContent="🔒 Bocoran Terpakai";
+});
+
+document.querySelectorAll(".level").forEach(function(btn){
+    btn.addEventListener("click",function(){
+        document.querySelectorAll(".level").forEach(function(b){b.classList.remove("active")});
+        btn.classList.add("active");
+        maxNumber=Number(btn.dataset.max);
+        newGame();
+    });
+});
+
+newGame();
+})();
+</script>
+</body>
+</html>
